@@ -1,0 +1,16 @@
+{% extends 'survey/base.html' %}
+
+{% block content %}
+      <label for="floatingPassword"></label>
+<form method="post" action="{% url 'users:confirm_code' %}">
+    <div class="form-floating">
+    {% csrf_token %}
+        <input type="hidden" name="phone_number" value="{{ request.GET.phone_number }}">
+    <div class="form-floating">
+        <input type="text" class="form-control" name="confirm_code" placeholder="Введите 4х-значный код" required>
+        <label for="floatingPassword"></label>
+    </div>
+    <button type="submit" class="btn btn-outline-primary">Подтвердить</button>
+    </div>
+</form>
+{% endblock %}
