@@ -2,7 +2,6 @@
 
 {% block content %}
       <label for="floatingPassword"></label>
-    </div>
 <form method="post" action="{% url 'users:send_code' %}">
     <div class="form-floating">
     {% csrf_token %}

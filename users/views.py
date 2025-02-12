@@ -6,6 +6,7 @@ import requests
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
+from django.views import View
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,13 +18,17 @@ from users.models import User
 logger = logging.getLogger(__name__)
 
 
-class SendConfirmCodeView(APIView):
+# class LoginPageView(TemplateView):
+#     template_name = 'survey/login.html'
+
+
+class SendConfirmCodeView(View):
     def get(self, request):
         return render(request, 'survey/login.html')
 
     def post(self, request):
         print("Функция отправки кода вызвана")
-        phone_number = request.data.get('phone_number')
+        phone_number = request.POST.get('phone_number')
 
         if not phone_number:
             return Response({'error': 'Номер телефона обязателен'}, status=status.HTTP_400_BAD_REQUEST)
@@ -57,12 +62,13 @@ class SendConfirmCodeView(APIView):
             logger.info(f"Код подтверждения отправлен на номер {phone_number}")
             redirect_url = reverse('users:confirm_code') + f"?phone_number={phone_number}"
             logger.info(f"Перенаправление на: {redirect_url}")
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
             # return render(request, 'confirm.html', {'phone_number': phone_number})
             # return Response({'message': 'Код отправлен'}, status=status.HTTP_200_OK)
         else:
             logger.error(f"Ошибка при отправке SMS: {response.text}")
-            return Response({'error': 'Ошибка при отправке SMS'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return render(request, 'survey/confirm.html', {'error': 'Ошибка при отправке SMS'})
+            # return Response({'error': 'Ошибка при отправке SMS'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ConfirmCodeView(APIView):
@@ -71,18 +77,18 @@ class ConfirmCodeView(APIView):
         return render(request, 'survey/confirm.html', {'phone_number': phone_number})
 
     def post(self, request):
-        phone_number = request.data.get('phone_number')
+        # phone_number = request.data.get('phone_number')
         confirm_code = request.data.get('confirm_code')
 
-        if not phone_number or not confirm_code:
-            return Response({'error': 'Номер телефона и код подтверждения обязательны!'},
+        if  not confirm_code:
+            return Response({'error': 'Введите код подтверждения!'},
                             status=status.HTTP_400_BAD_REQUEST)
-        logger.info(f"Поиск пользователя с номером: {phone_number}")
+        logger.info(f"Поиск пользователя с кодом: {confirm_code}")
         try:
-            user = User.objects.get(phone_number=phone_number)
+            user = User.objects.get(confirm_code=confirm_code)
             logger.info(f"Пользователь найден: {user.phone_number}, Код: {user.confirm_code}")
         except User.DoesNotExist:
-            logger.error(f"Пользователь с номером {phone_number} не найден")
+            logger.error(f"Пользователь с кодом {confirm_code} не найден")
             return Response({"error": "Пользователь с таким номером телефона не найден"},
                             status=status.HTTP_404_NOT_FOUND)
 
@@ -90,7 +96,7 @@ class ConfirmCodeView(APIView):
         if user.confirm_code == confirm_code:
             user.is_active = True
             user.save()
-            return redirect('survey')
+            return redirect('users:survey')
             # return Response({'message': 'Код подтвержден'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Неверный код подтверждения'}, status=status.HTTP_400_BAD_REQUEST)
@@ -98,4 +104,4 @@ class ConfirmCodeView(APIView):
 
 class SurveyPageView(TemplateView):
     def get_template_names(self):
-        return ['survey/login.html']
+        return ['survey/survey.html']

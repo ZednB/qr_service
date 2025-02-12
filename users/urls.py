@@ -7,6 +7,7 @@ app_name = UsersConfig.name
 
 urlpatterns = [
     path('', SurveyPageView.as_view(), name='survey'),
+    # path('login/', LoginPageView.as_view(), name='login'),
     path('send-code/', SendConfirmCodeView.as_view(), name='send_code'),
     path('confirm-code/', ConfirmCodeView.as_view(), name='confirm_code'),
 ]
